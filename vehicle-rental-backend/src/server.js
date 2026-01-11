@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config(); // ✅ MUST BE FIRST, BEFORE ALL OTHER IMPORTS
+dotenv.config(); // MUST be first
 
 import express from "express";
 import cors from "cors";
@@ -16,24 +16,45 @@ import paymentRoutes from "./routes/payment.routes.js";
 // Error middleware
 import errorHandler from "./middlewares/error.middleware.js";
 
-// Connect to MongoDB
+// --------------------------------------------------
+// DB
+// --------------------------------------------------
 connectDB();
 
 const app = express();
 
-/* ======================================================
-   MIDDLEWARES
-   ====================================================== */
+// --------------------------------------------------
+// CORS (FIXED FOR NETLIFY + RENDER)
+// --------------------------------------------------
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://vehiclerental123.netlify.app", // 🔴 PUT YOUR REAL NETLIFY URL
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://your-real-site-name.netlify.app"
-    ],
+    origin: (origin, callback) => {
+      // allow Postman, server-to-server
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+// IMPORTANT: preflight support
+app.options("*", cors());
+
+// --------------------------------------------------
+// MIDDLEWARES
+// --------------------------------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -41,30 +62,30 @@ if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
 
-/* ======================================================
-   ROUTES
-   ====================================================== */
+// --------------------------------------------------
+// ROUTES
+// --------------------------------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/owner", ownerRoutes);
 app.use("/api/renter", renterRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentRoutes);
 
-/* ======================================================
-   HEALTH CHECK (OPTIONAL BUT GOOD)
-   ====================================================== */
+// --------------------------------------------------
+// HEALTH CHECK
+// --------------------------------------------------
 app.get("/", (req, res) => {
   res.send("🚗 Vehicle Rental API is running");
 });
 
-/* ======================================================
-   ERROR HANDLER (MUST BE LAST)
-   ====================================================== */
+// --------------------------------------------------
+// ERROR HANDLER (MUST BE LAST)
+// --------------------------------------------------
 app.use(errorHandler);
 
-/* ======================================================
-   SERVER
-   ====================================================== */
+// --------------------------------------------------
+// SERVER
+// --------------------------------------------------
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
