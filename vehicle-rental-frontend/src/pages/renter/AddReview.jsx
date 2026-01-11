@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
 
@@ -6,10 +6,35 @@ const AddReview = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
 
-  const [vehicle, setVehicle] = useState("");
+  const [booking, setBooking] = useState(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // 🔹 Load booking to get vehicle automatically
+  useEffect(() => {
+    const loadBooking = async () => {
+      try {
+        const res = await api.get("/renter/bookings");
+        const found = res.data.bookings.find(
+          (b) => b._id === bookingId
+        );
+
+        if (!found) {
+          setError("Booking not found");
+        } else {
+          setBooking(found);
+        }
+      } catch {
+        setError("Failed to load booking");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBooking();
+  }, [bookingId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,8 +42,8 @@ const AddReview = () => {
 
     try {
       await api.post("/renter/reviews", {
-        booking: bookingId,
-        vehicle,
+        booking: booking._id,
+        vehicle: booking.vehicle._id, // ✅ AUTO
         rating,
         comment,
       });
@@ -30,43 +55,48 @@ const AddReview = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-gray-300">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-red-500">
+        {error}
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-sm border p-6 space-y-6">
-        <h2 className="text-2xl font-semibold text-gray-800 text-center">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6 space-y-6">
+        <h2 className="text-2xl font-semibold text-white text-center">
           Add Review
         </h2>
 
+        <p className="text-sm text-gray-400 text-center">
+          {booking.vehicle.make} {booking.vehicle.model}
+        </p>
+
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-3 py-2">
+          <div className="bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-lg px-3 py-2">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Vehicle ID
-            </label>
-            <input
-              placeholder="Enter vehicle ID"
-              value={vehicle}
-              onChange={(e) => setVehicle(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Rating
             </label>
             <select
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"
             >
               {[1, 2, 3, 4, 5].map((r) => (
                 <option key={r} value={r}>
@@ -77,7 +107,7 @@ const AddReview = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Comment
             </label>
             <textarea
@@ -85,15 +115,13 @@ const AddReview = () => {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={4}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 resize-none"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium
-                       py-2.5 rounded-lg transition duration-200 shadow-sm"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition"
           >
             Submit Review
           </button>
