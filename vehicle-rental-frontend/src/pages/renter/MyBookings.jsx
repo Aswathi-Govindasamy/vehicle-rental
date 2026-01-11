@@ -11,7 +11,7 @@ const MyBookings = () => {
   const loadBookings = async () => {
     try {
       const data = await getMyBookings();
-      setBookings(data.bookings);
+      setBookings(data.bookings || []);
     } catch {
       setError("Failed to load bookings");
     } finally {
@@ -56,8 +56,13 @@ const MyBookings = () => {
 
   const handleCancel = async (id) => {
     if (!window.confirm("Cancel this booking?")) return;
-    await cancelBooking(id);
-    loadBookings();
+
+    try {
+      await cancelBooking(id);
+      loadBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to cancel booking");
+    }
   };
 
   if (loading) {
@@ -87,7 +92,7 @@ const MyBookings = () => {
           <p className="text-gray-400">No bookings found</p>
         )}
 
-        {/* 🔳 GRID: 1 / 2 / 4 columns */}
+        {/* GRID */}
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {bookings.map((b) => (
             <div
@@ -95,25 +100,29 @@ const MyBookings = () => {
               className="bg-gray-900 border border-gray-800 rounded-2xl shadow hover:shadow-lg transition p-5 flex flex-col"
             >
               {/* IMAGE */}
-            <div className="h-36 bg-gray-800 rounded-xl overflow-hidden mb-4">
-  {b.vehicle?.images?.length > 0 ? (
-    <img
-      src={b.vehicle.images[0]}
-      alt={`${b.vehicle.make} ${b.vehicle.model}`}
-      className="w-full h-full object-cover"
-    />
-  ) : (
-    <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-      No Image
-    </div>
-  )}
-</div>
-
-
+              <div className="h-36 bg-gray-800 rounded-xl overflow-hidden mb-4">
+                {b.vehicle?.images?.length > 0 ? (
+                  <img
+                    src={b.vehicle.images[0]}
+                    alt={
+                      b.vehicle?.make
+                        ? `${b.vehicle.make} ${b.vehicle.model}`
+                        : "Vehicle Removed"
+                    }
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                    No Image
+                  </div>
+                )}
+              </div>
 
               {/* DETAILS */}
               <h4 className="text-lg font-semibold text-white">
-                {b.vehicle.make} {b.vehicle.model}
+                {b.vehicle?.make
+                  ? `${b.vehicle.make} ${b.vehicle.model}`
+                  : "Vehicle Removed"}
               </h4>
 
               <p className="text-sm text-gray-400 mt-1">
