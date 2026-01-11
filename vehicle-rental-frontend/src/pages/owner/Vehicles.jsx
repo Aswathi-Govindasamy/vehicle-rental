@@ -13,7 +13,7 @@ const OwnerVehicles = () => {
   const loadVehicles = async () => {
     try {
       const data = await getMyVehicles();
-      setVehicles(data.vehicles);
+      setVehicles(data.vehicles || []);
     } catch {
       setError("Failed to load vehicles");
     } finally {
@@ -25,10 +25,20 @@ const OwnerVehicles = () => {
     loadVehicles();
   }, []);
 
+  // ✅ FIXED DELETE HANDLER (THIS WAS THE ISSUE)
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this vehicle?")) return;
-    await deleteVehicle(id);
-    loadVehicles();
+
+    try {
+      await deleteVehicle(id);
+      alert("Vehicle deleted successfully");
+      loadVehicles();
+    } catch (err) {
+      alert(
+        err.response?.data?.message ||
+          "Vehicle cannot be deleted while booked"
+      );
+    }
   };
 
   if (loading) {
@@ -66,7 +76,7 @@ const OwnerVehicles = () => {
           </Link>
         </div>
 
-        {/* EMPTY */}
+        {/* EMPTY STATE */}
         {vehicles.length === 0 && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-gray-400">
             No vehicles added yet
@@ -84,17 +94,16 @@ const OwnerVehicles = () => {
               {/* IMAGE */}
               <div className="h-32 bg-gray-800 rounded-xl overflow-hidden mb-4">
                 {v.images && v.images.length > 0 ? (
-  <img
-    src={v.images[0]}
-    alt={`${v.make} ${v.model}`}
-    className="w-full h-full object-cover"
-  />
-) : (
-  <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-    No Image
-  </div>
-)}
-
+                  <img
+                    src={v.images[0]}
+                    alt={`${v.make} ${v.model}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                    No Image
+                  </div>
+                )}
               </div>
 
               {/* INFO */}
@@ -129,11 +138,24 @@ const OwnerVehicles = () => {
 
                 <button
                   onClick={() => handleDelete(v._id)}
-                  className="text-red-400 text-sm font-medium hover:text-red-300 transition"
+                  disabled={v.bookingCount > 0}
+                  className={`text-sm font-medium transition
+                    ${
+                      v.bookingCount > 0
+                        ? "text-gray-500 cursor-not-allowed"
+                        : "text-red-400 hover:text-red-300"
+                    }`}
                 >
                   Delete
                 </button>
               </div>
+
+              {/* BOOKED INFO */}
+              {v.bookingCount > 0 && (
+                <p className="text-xs text-red-400 mt-2">
+                  Cannot delete – vehicle has active bookings
+                </p>
+              )}
             </div>
           ))}
         </div>
