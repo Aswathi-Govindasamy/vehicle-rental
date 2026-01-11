@@ -28,7 +28,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://vehiclerental123.netlify.app/"
+      "https://vehiclerental123.netlify.app"
     ],
     credentials: true,
   })
