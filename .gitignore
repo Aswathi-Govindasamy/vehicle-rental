@@ -1,0 +1,16 @@
+# Node
+node_modules/
+
+# Env files
+.env
+vehicle-rental-backend/.env
+vehicle-rental-frontend/.env
+
+# Build outputs
+frontend/dist
+backend/dist
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
