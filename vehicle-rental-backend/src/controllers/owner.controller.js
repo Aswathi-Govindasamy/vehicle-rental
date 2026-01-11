@@ -5,7 +5,7 @@ import Maintenance from "../models/Maintenance.model.js";
 /* ======================================================
    ADD VEHICLE
    ====================================================== */
-   export const addVehicle = async (req, res, next) => {
+export const addVehicle = async (req, res, next) => {
   try {
     const {
       make,
@@ -17,9 +17,7 @@ import Maintenance from "../models/Maintenance.model.js";
       description,
     } = req.body;
 
-    const images = req.files
-      ? req.files.map((file) => file.path)
-      : [];
+    const images = req.files ? req.files.map((file) => file.path) : [];
 
     const vehicle = await Vehicle.create({
       owner: req.user._id,
@@ -44,15 +42,31 @@ import Maintenance from "../models/Maintenance.model.js";
   }
 };
 
-
-
 /* ======================================================
-   GET MY VEHICLES
+   GET MY VEHICLES (WITH BOOKING COUNT)
    ====================================================== */
 export const getMyVehicles = async (req, res, next) => {
   try {
     const vehicles = await Vehicle.find({ owner: req.user._id });
-    res.json({ success: true, vehicles });
+
+    const vehiclesWithBookingCount = await Promise.all(
+      vehicles.map(async (v) => {
+        const count = await Booking.countDocuments({
+          vehicle: v._id,
+          status: { $in: ["pending_payment", "booked"] },
+        });
+
+        return {
+          ...v.toObject(),
+          bookingCount: count,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      vehicles: vehiclesWithBookingCount,
+    });
   } catch (error) {
     next(error);
   }
@@ -110,21 +124,23 @@ export const deleteVehicle = async (req, res, next) => {
     });
 
     if (!vehicle) {
-      res.status(404);
-      throw new Error("Vehicle not found");
+      return res.status(404).json({
+        success: false,
+        message: "Vehicle not found or not authorized",
+      });
     }
 
-    // ❗ Prevent deletion if active bookings exist
+    // ❗ Block delete if active bookings exist
     const activeBooking = await Booking.findOne({
       vehicle: vehicle._id,
       status: { $in: ["pending_payment", "booked"] },
     });
 
     if (activeBooking) {
-      res.status(400);
-      throw new Error(
-        "Vehicle cannot be deleted while active bookings exist"
-      );
+      return res.status(400).json({
+        success: false,
+        message: "Vehicle already booked. Cannot delete.",
+      });
     }
 
     await vehicle.deleteOne();
@@ -164,7 +180,7 @@ export const getVehicleBookings = async (req, res, next) => {
 };
 
 /* ======================================================
-   ALL BOOKINGS FOR OWNER (ALL VEHICLES)
+   ALL BOOKINGS FOR OWNER
    ====================================================== */
 export const getAllBookingsForOwner = async (req, res, next) => {
   try {
@@ -213,7 +229,6 @@ export const addMaintenance = async (req, res, next) => {
       status: "in-progress",
     });
 
-    // mark vehicle unavailable during maintenance
     ownedVehicle.isAvailable = false;
     await ownedVehicle.save();
 
