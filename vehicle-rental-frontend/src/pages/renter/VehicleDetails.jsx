@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getVehicleDetails, createBooking } from "../../api/renter.api";
-import useAuth from "../../auth/UseAuth";
+import useAuth from "../../auth/useAuth";
 
 const VehicleDetails = () => {
   const { id } = useParams();
