@@ -12,21 +12,22 @@ const AddReview = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Load booking to get vehicle automatically
+  // 🔹 Load booking to derive vehicle ID automatically
   useEffect(() => {
     const loadBooking = async () => {
       try {
         const res = await api.get("/renter/bookings");
-        const found = res.data.bookings.find(
+
+        const foundBooking = res.data.bookings.find(
           (b) => b._id === bookingId
         );
 
-        if (!found) {
+        if (!foundBooking) {
           setError("Booking not found");
         } else {
-          setBooking(found);
+          setBooking(foundBooking);
         }
-      } catch {
+      } catch (err) {
         setError("Failed to load booking");
       } finally {
         setLoading(false);
@@ -43,7 +44,10 @@ const AddReview = () => {
     try {
       await api.post("/renter/reviews", {
         booking: booking._id,
-        vehicle: booking.vehicle._id, // ✅ AUTO
+        vehicle:
+          typeof booking.vehicle === "object"
+            ? booking.vehicle._id
+            : booking.vehicle, // ✅ works for populated & non-populated
         rating,
         comment,
       });
@@ -54,6 +58,8 @@ const AddReview = () => {
       setError(err.response?.data?.message || "Failed to add review");
     }
   };
+
+  /* ================= STATES ================= */
 
   if (loading) {
     return (
@@ -71,6 +77,13 @@ const AddReview = () => {
     );
   }
 
+  const vehicleName =
+    typeof booking.vehicle === "object" && booking.vehicle !== null
+      ? `${booking.vehicle.make} ${booking.vehicle.model}`
+      : "Vehicle";
+
+  /* ================= UI ================= */
+
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-6 space-y-6">
@@ -78,8 +91,9 @@ const AddReview = () => {
           Add Review
         </h2>
 
+        {/* ✅ SAFE VEHICLE NAME */}
         <p className="text-sm text-gray-400 text-center">
-          {booking.vehicle.make} {booking.vehicle.model}
+          {vehicleName}
         </p>
 
         {error && (
@@ -89,6 +103,7 @@ const AddReview = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* RATING */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Rating
@@ -106,6 +121,7 @@ const AddReview = () => {
             </select>
           </div>
 
+          {/* COMMENT */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Comment
