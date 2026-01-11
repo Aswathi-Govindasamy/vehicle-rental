@@ -4,13 +4,22 @@ import { getOwnerBookings } from "../../api/owner.api";
 const OwnerBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const load = async () => {
-      const data = await getOwnerBookings();
-      setBookings(data.bookings);
-      setLoading(false);
+      try {
+        const data = await getOwnerBookings();
+        setBookings(data.bookings || []);
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "Failed to load bookings"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
+
     load();
   }, []);
 
@@ -18,6 +27,14 @@ const OwnerBookings = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 text-gray-300">
         Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-red-400">
+        {error}
       </div>
     );
   }
@@ -35,7 +52,7 @@ const OwnerBookings = () => {
           </p>
         )}
 
-        {/* 🔳 GRID: 1 / 2 / 4 columns */}
+        {/* GRID */}
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {bookings.map((b) => (
             <div
@@ -45,7 +62,7 @@ const OwnerBookings = () => {
               {/* HEADER */}
               <div className="flex justify-between items-start">
                 <h4 className="text-lg font-semibold text-white">
-                  {b.vehicle.make} {b.vehicle.model}
+                  {b.vehicle?.make} {b.vehicle?.model}
                 </h4>
 
                 <span
@@ -58,7 +75,7 @@ const OwnerBookings = () => {
                         : "bg-gray-800 text-gray-400"
                     }`}
                 >
-                  {b.status.replace("_", " ").toUpperCase()}
+                  {b.status?.replace("_", " ").toUpperCase()}
                 </span>
               </div>
 
@@ -68,7 +85,7 @@ const OwnerBookings = () => {
                   <span className="font-medium text-gray-300">
                     Renter:
                   </span>{" "}
-                  {b.user.name}
+                  {b.user?.name || "N/A"}
                 </p>
 
                 <p>
