@@ -28,17 +28,19 @@ const MyBookings = () => {
   }, []);
 
   const handlePay = async (bookingId) => {
-    try {
-      const data = await createPaymentOrder(bookingId);
+  try {
+    const data = await createPaymentOrder(bookingId);
 
-      const options = {
-        key: data.key,
-        amount: data.order.amount,
-        currency: data.order.currency,
-        name: "Vehicle Rental System",
-        description: "Booking Payment",
-        order_id: data.order.id,
-        handler: async function (response) {
+    const options = {
+      key: data.key,
+      amount: data.order.amount,
+      currency: data.order.currency,
+      name: "Vehicle Rental System",
+      description: "Booking Payment",
+      order_id: data.order.id,
+
+      handler: async function (response) {
+        try {
           await verifyPayment({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
@@ -47,16 +49,34 @@ const MyBookings = () => {
           });
 
           alert("Payment successful!");
-          loadBookings();
-        },
-      };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      alert(err.response?.data?.message || "Payment failed");
-    }
-  };
+          restoreScroll();   // ✅ FIX
+          loadBookings();
+        } catch (err) {
+          restoreScroll();   // ✅ FIX
+          alert("Payment verification failed");
+        }
+      },
+
+      modal: {
+        ondismiss: function () {
+          restoreScroll();   // ✅ FIX
+        },
+      },
+
+      theme: {
+        color: "#4f46e5",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  } catch (err) {
+    restoreScroll();         // ✅ FIX
+    alert(err.response?.data?.message || "Payment failed");
+  }
+};
+
 
   const handleCancel = async (id) => {
     if (!window.confirm("Cancel this booking?")) return;
