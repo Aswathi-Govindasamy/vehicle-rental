@@ -9,15 +9,25 @@ const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const rememberLoad = async () => {
+  const loadReviews = async () => {
     const data = await getAllReviews();
     setReviews(data.reviews);
     setLoading(false);
   };
 
   useEffect(() => {
-    rememberLoad();
+    loadReviews();
   }, []);
+
+  const handleApprove = async (id) => {
+    await approveReview(id);
+    loadReviews(); // ✅ refresh UI
+  };
+
+  const handleReject = async (id) => {
+    await rejectReview(id);
+    loadReviews(); // ✅ refresh UI
+  };
 
   if (loading) {
     return (
@@ -38,7 +48,6 @@ const AdminReviews = () => {
           <p className="text-gray-400">No reviews found</p>
         )}
 
-        {/* GRID */}
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {reviews.map((r) => (
             <div
@@ -46,7 +55,6 @@ const AdminReviews = () => {
               className="bg-gray-900 border border-gray-800 rounded-2xl shadow
                          hover:shadow-lg transition p-6 flex flex-col"
             >
-              {/* HEADER */}
               <p className="text-sm font-medium text-white">
                 {r.user.name}
                 <span className="ml-2 text-yellow-400">
@@ -54,14 +62,12 @@ const AdminReviews = () => {
                 </span>
               </p>
 
-              {/* COMMENT */}
               {r.comment && (
                 <p className="text-gray-400 text-sm mt-3">
                   {r.comment}
                 </p>
               )}
 
-              {/* STATUS */}
               <span
                 className={`inline-block mt-4 px-3 py-1 text-xs font-semibold rounded-full w-fit
                   ${
@@ -73,11 +79,10 @@ const AdminReviews = () => {
                 {r.approved ? "APPROVED" : "PENDING"}
               </span>
 
-              {/* ACTIONS */}
               {!r.approved && (
                 <div className="mt-auto pt-5 flex gap-3">
                   <button
-                    onClick={() => approveReview(r._id)}
+                    onClick={() => handleApprove(r._id)}
                     className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md text-sm
                                hover:bg-green-700 transition"
                   >
@@ -85,7 +90,7 @@ const AdminReviews = () => {
                   </button>
 
                   <button
-                    onClick={() => rejectReview(r._id)}
+                    onClick={() => handleReject(r._id)}
                     className="flex-1 bg-red-600 text-white px-3 py-2 rounded-md text-sm
                                hover:bg-red-700 transition"
                   >
