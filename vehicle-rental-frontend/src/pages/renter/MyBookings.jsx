@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMyBookings, cancelBooking } from "../../api/renter.api";
 import { createPaymentOrder, verifyPayment } from "../../api/payment.api";
+const restoreScroll = () => {
+  document.body.style.overflow = "auto";
+  document.body.style.position = "static";
+};
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
