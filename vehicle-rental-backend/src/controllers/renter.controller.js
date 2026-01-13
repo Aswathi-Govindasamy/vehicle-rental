@@ -70,6 +70,21 @@ export const createBooking = async (req, res, next) => {
       throw new Error("Booking details are required");
     }
 
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start) || isNaN(end)) {
+      res.status(400);
+      throw new Error("Invalid date format");
+    }
+
+    if (start > end) {
+      res.status(400);
+      throw new Error(
+        "End date must be the same or after start date"
+      );
+    }
+
     const selectedVehicle = await Vehicle.findById(vehicle);
 
     if (!selectedVehicle || !selectedVehicle.approved) {
@@ -77,34 +92,55 @@ export const createBooking = async (req, res, next) => {
       throw new Error("Vehicle not available");
     }
 
+    // ❌ Owner booking own vehicle
     if (selectedVehicle.owner.toString() === req.user._id.toString()) {
       res.status(400);
       throw new Error("You cannot book your own vehicle");
     }
 
-    await checkAvailability(vehicle, startDate, endDate);
+    /* ======================================================
+       🔒 STRICT OVERLAP CHECK (END DATE IS INCLUSIVE)
+       Blocks:
+       - Jan 10 → Jan 12
+       - Jan 12 → Jan 14 ❌
+       Allows:
+       - Jan 13 → Jan 15 ✅
+    ====================================================== */
+    const overlappingBooking = await Booking.findOne({
+      vehicle,
+      status: { $in: ["pending_payment", "booked"] },
+      startDate: { $lte: end },   // inclusive
+      endDate: { $gte: start },   // inclusive
+    });
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
-    if (days <= 0) {
+    if (overlappingBooking) {
       res.status(400);
-      throw new Error("Invalid booking dates");
+      throw new Error(
+        "Vehicle is already booked for the selected dates"
+      );
     }
+
+    // ✅ Inclusive day calculation
+    const days =
+      Math.ceil(
+        (end - start) / (1000 * 60 * 60 * 24)
+      ) + 1;
 
     const totalAmount = days * selectedVehicle.pricePerDay;
 
     const booking = await Booking.create({
       user: req.user._id,
       vehicle,
-      startDate,
-      endDate,
+      startDate: start,
+      endDate: end,
       totalAmount,
       status: "pending_payment",
     });
 
-    res.status(201).json({ success: true, booking });
+    res.status(201).json({
+      success: true,
+      booking,
+    });
   } catch (error) {
     next(error);
   }
