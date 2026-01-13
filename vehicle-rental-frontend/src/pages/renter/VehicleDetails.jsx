@@ -59,11 +59,8 @@ const VehicleDetails = () => {
       return;
     }
 
-    // ✅ Inclusive day count (matches backend)
     const calculatedDays =
-      Math.ceil(
-        (end - start) / (1000 * 60 * 60 * 24)
-      ) + 1;
+      Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
     setDays(calculatedDays);
     setTotalPrice(calculatedDays * vehicle.pricePerDay);
@@ -156,7 +153,7 @@ const VehicleDetails = () => {
 
         {/* IMAGE */}
         <div className="w-full h-64 bg-gray-800 rounded-xl overflow-hidden mb-6">
-          {vehicle.images && vehicle.images.length > 0 ? (
+          {vehicle.images?.length > 0 ? (
             <img
               src={vehicle.images[0]}
               alt={`${vehicle.make} ${vehicle.model}`}
@@ -199,9 +196,7 @@ const VehicleDetails = () => {
         </h3>
 
         {bookingError && (
-          <p className="text-red-500 mb-4">
-            {bookingError}
-          </p>
+          <p className="text-red-500 mb-4">{bookingError}</p>
         )}
 
         {user?.role === "renter" ? (
@@ -215,9 +210,7 @@ const VehicleDetails = () => {
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) =>
-                  setStartDate(e.target.value)
-                }
+                onChange={(e) => setStartDate(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
                            text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
@@ -231,33 +224,23 @@ const VehicleDetails = () => {
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) =>
-                  setEndDate(e.target.value)
-                }
+                onChange={(e) => setEndDate(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
                            text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* ✅ DAYS & PRICE UI */}
+            {/* DAYS & PRICE */}
             {days > 0 && (
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-sm space-y-2">
                 <p>
-                  <span className="text-gray-400">
-                    Number of days:
-                  </span>{" "}
-                  <span className="font-medium text-white">
-                    {days}
-                  </span>
+                  <span className="text-gray-400">Number of days:</span>{" "}
+                  <span className="font-medium text-white">{days}</span>
                 </p>
-
                 <p>
-                  <span className="text-gray-400">
-                    Price per day:
-                  </span>{" "}
+                  <span className="text-gray-400">Price per day:</span>{" "}
                   ₹{vehicle.pricePerDay}
                 </p>
-
                 <p className="text-lg font-semibold text-white">
                   Total: ₹{totalPrice}
                 </p>
@@ -271,9 +254,7 @@ const VehicleDetails = () => {
               className="bg-indigo-600 text-white px-6 py-2 rounded-md text-sm font-medium
                          hover:bg-indigo-700 transition disabled:opacity-60"
             >
-              {bookingLoading
-                ? "Booking..."
-                : "Book Now"}
+              {bookingLoading ? "Booking..." : "Book Now"}
             </button>
           </div>
         ) : (
@@ -290,9 +271,7 @@ const VehicleDetails = () => {
         </h3>
 
         {reviews.length === 0 && (
-          <p className="text-gray-400">
-            No reviews yet
-          </p>
+          <p className="text-gray-400">No reviews yet</p>
         )}
 
         <div className="space-y-5">
@@ -304,9 +283,26 @@ const VehicleDetails = () => {
               <p className="font-medium text-white">
                 {r.user.name}
               </p>
-              <p className="text-sm text-yellow-400">
-                ⭐ {r.rating}
-              </p>
+
+              {/* ⭐ FIX #4 — STAR RATING UI */}
+              <div className="flex items-center gap-1 mt-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    className={
+                      star <= r.rating
+                        ? "text-yellow-400 text-lg"
+                        : "text-gray-600 text-lg"
+                    }
+                  >
+                    ★
+                  </span>
+                ))}
+                <span className="ml-2 text-sm text-gray-400">
+                  ({r.rating}/5)
+                </span>
+              </div>
+
               {r.comment && (
                 <p className="text-gray-300 text-sm mt-2">
                   {r.comment}
