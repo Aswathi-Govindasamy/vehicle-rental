@@ -36,32 +36,52 @@ const VehicleDetails = () => {
   }, [id]);
 
   const handleBooking = async () => {
-    if (!startDate || !endDate) {
-      setBookingError("Please select start and end dates");
-      return;
-    }
+  if (!startDate || !endDate) {
+    setBookingError("Please select start and end dates");
+    return;
+  }
 
-    try {
-      setBookingLoading(true);
-      setBookingError("");
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
-      await createBooking({
-        vehicle: vehicle._id,
-        startDate,
-        endDate,
-      });
+  if (isNaN(start) || isNaN(end)) {
+    setBookingError("Invalid date selected");
+    return;
+  }
 
-      alert(
-        "Booking created successfully! Proceed to payment from My Bookings."
-      );
-      setStartDate("");
-      setEndDate("");
-    } catch (err) {
-      setBookingError(err.response?.data?.message || "Booking failed");
-    } finally {
-      setBookingLoading(false);
-    }
-  };
+  if (start > end) {
+    setBookingError(
+      "End date must be the same or after start date"
+    );
+    return;
+  }
+
+  try {
+    setBookingLoading(true);
+    setBookingError("");
+
+    await createBooking({
+      vehicle: vehicle._id,
+      startDate,
+      endDate,
+    });
+
+    alert(
+      "Booking created successfully. Proceed to payment from My Bookings."
+    );
+
+    setStartDate("");
+    setEndDate("");
+  } catch (err) {
+    setBookingError(
+      err.response?.data?.message ||
+        "Booking failed"
+    );
+  } finally {
+    setBookingLoading(false);
+  }
+};
+
 
   if (loading) {
     return (
