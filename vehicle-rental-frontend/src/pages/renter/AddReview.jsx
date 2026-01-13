@@ -8,11 +8,12 @@ const AddReview = () => {
 
   const [booking, setBooking] = useState(null);
   const [rating, setRating] = useState(5);
+  const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Load booking to derive vehicle ID automatically
+  // 🔹 Load booking
   useEffect(() => {
     const loadBooking = async () => {
       try {
@@ -27,7 +28,7 @@ const AddReview = () => {
         } else {
           setBooking(foundBooking);
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load booking");
       } finally {
         setLoading(false);
@@ -47,7 +48,7 @@ const AddReview = () => {
         vehicle:
           typeof booking.vehicle === "object"
             ? booking.vehicle._id
-            : booking.vehicle, // ✅ works for populated & non-populated
+            : booking.vehicle,
         rating,
         comment,
       });
@@ -55,7 +56,9 @@ const AddReview = () => {
       alert("Review submitted for approval");
       navigate("/bookings");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add review");
+      setError(
+        err.response?.data?.message || "Failed to add review"
+      );
     }
   };
 
@@ -78,7 +81,7 @@ const AddReview = () => {
   }
 
   const vehicleName =
-    typeof booking.vehicle === "object" && booking.vehicle !== null
+    typeof booking.vehicle === "object" && booking.vehicle
       ? `${booking.vehicle.make} ${booking.vehicle.model}`
       : "Vehicle";
 
@@ -91,7 +94,6 @@ const AddReview = () => {
           Add Review
         </h2>
 
-        {/* ✅ SAFE VEHICLE NAME */}
         <p className="text-sm text-gray-400 text-center">
           {vehicleName}
         </p>
@@ -102,23 +104,42 @@ const AddReview = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* RATING */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* ⭐ STAR RATING */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Rating
             </label>
-            <select
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"
-            >
-              {[1, 2, 3, 4, 5].map((r) => (
-                <option key={r} value={r}>
-                  {r} Star{r > 1 && "s"}
-                </option>
+
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHover(star)}
+                  onMouseLeave={() => setHover(0)}
+                  className="text-3xl focus:outline-none"
+                >
+                  <span
+                    className={
+                      star <= (hover || rating)
+                        ? "text-yellow-400"
+                        : "text-gray-600"
+                    }
+                  >
+                    ★
+                  </span>
+                </button>
               ))}
-            </select>
+            </div>
+
+            <p className="text-xs text-gray-400 mt-1">
+              Selected:{" "}
+              <span className="text-white font-medium">
+                {rating} / 5
+              </span>
+            </p>
           </div>
 
           {/* COMMENT */}
@@ -131,7 +152,8 @@ const AddReview = () => {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={4}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 resize-none"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 resize-none
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
