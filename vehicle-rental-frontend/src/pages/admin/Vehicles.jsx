@@ -19,6 +19,20 @@ const AdminVehicles = () => {
     loadVehicles();
   }, []);
 
+  /* ================= ACTION HANDLERS ================= */
+
+  const handleApprove = async (id) => {
+    await approveVehicle(id);
+    loadVehicles(); // ✅ refresh UI
+  };
+
+  const handleReject = async (id) => {
+    await rejectVehicle(id);
+    loadVehicles(); // ✅ refresh UI
+  };
+
+  /* ================= UI ================= */
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 text-gray-300">
@@ -46,7 +60,7 @@ const AdminVehicles = () => {
               className="bg-gray-900 border border-gray-800 rounded-2xl shadow
                          hover:shadow-lg transition p-6 flex flex-col"
             >
-              {/* ✅ VEHICLE IMAGE */}
+              {/* IMAGE */}
               <div className="h-36 bg-gray-800 rounded-xl overflow-hidden mb-4">
                 {v.images && v.images.length > 0 ? (
                   <img
@@ -61,7 +75,7 @@ const AdminVehicles = () => {
                 )}
               </div>
 
-              {/* VEHICLE INFO */}
+              {/* INFO */}
               <div>
                 <h4 className="text-lg font-semibold text-white">
                   {v.make} {v.model}
@@ -88,7 +102,7 @@ const AdminVehicles = () => {
               {!v.approved && (
                 <div className="mt-auto pt-5 flex gap-3">
                   <button
-                    onClick={() => approveVehicle(v._id)}
+                    onClick={() => handleApprove(v._id)}
                     className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md text-sm
                                hover:bg-green-700 transition"
                   >
@@ -96,7 +110,7 @@ const AdminVehicles = () => {
                   </button>
 
                   <button
-                    onClick={() => rejectVehicle(v._id)}
+                    onClick={() => handleReject(v._id)}
                     className="flex-1 bg-red-600 text-white px-3 py-2 rounded-md text-sm
                                hover:bg-red-700 transition"
                   >
