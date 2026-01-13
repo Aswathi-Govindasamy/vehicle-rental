@@ -56,9 +56,13 @@ const AddReview = () => {
       alert("Review submitted for approval");
       navigate("/bookings");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to add review"
-      );
+      if (
+  err.response?.data?.message?.toLowerCase().includes("duplicate")
+) {
+  setError("You have already submitted a review for this booking.");
+} else {
+  setError(err.response?.data?.message || "Failed to add review");
+}
     }
   };
 
