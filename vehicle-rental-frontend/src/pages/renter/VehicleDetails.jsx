@@ -68,50 +68,59 @@ const VehicleDetails = () => {
   /* ================= HANDLE BOOKING ================= */
 
   const handleBooking = async () => {
-    if (!startDate || !endDate) {
-      setBookingError("Please select start and end dates");
-      return;
-    }
+  if (!startDate || !endDate) {
+    setBookingError("Please select start and end dates");
+    return;
+  }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
-    if (isNaN(start) || isNaN(end)) {
-      setBookingError("Invalid date selected");
-      return;
-    }
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
 
-    if (start > end) {
-      setBookingError(
-        "End date must be the same or after start date"
-      );
-      return;
-    }
+  // ✅ PAST DATE BLOCK (REQUIRED FIX)
+  if (start < todayDate) {
+    setBookingError("You cannot book for past dates");
+    return;
+  }
 
-    try {
-      setBookingLoading(true);
-      setBookingError("");
+  if (isNaN(start) || isNaN(end)) {
+    setBookingError("Invalid date selected");
+    return;
+  }
 
-      await createBooking({
-        vehicle: vehicle._id,
-        startDate,
-        endDate,
-      });
+  if (start > end) {
+    setBookingError(
+      "End date must be the same or after start date"
+    );
+    return;
+  }
 
-      alert(
-        "Booking created successfully. Proceed to payment from My Bookings."
-      );
+  try {
+    setBookingLoading(true);
+    setBookingError("");
 
-      setStartDate("");
-      setEndDate("");
-    } catch (err) {
-      setBookingError(
-        err.response?.data?.message || "Booking failed"
-      );
-    } finally {
-      setBookingLoading(false);
-    }
-  };
+    await createBooking({
+      vehicle: vehicle._id,
+      startDate,
+      endDate,
+    });
+
+    alert(
+      "Booking created successfully. Proceed to payment from My Bookings."
+    );
+
+    setStartDate("");
+    setEndDate("");
+  } catch (err) {
+    setBookingError(
+      err.response?.data?.message || "Booking failed"
+    );
+  } finally {
+    setBookingLoading(false);
+  }
+};
 
   /* ================= STATES ================= */
 
