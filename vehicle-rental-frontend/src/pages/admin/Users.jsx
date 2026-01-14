@@ -3,14 +3,22 @@ import {
   getAllUsers,
   toggleUserBlock,
 } from "../../api/admin.api";
+import useAuth from "../../auth/useAuth";
 
 const AdminUsers = () => {
+  const { user: loggedInAdmin } = useAuth(); // ✅ current admin
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadUsers = async () => {
     const data = await getAllUsers();
-    setUsers(data.users);
+
+    // ✅ REMOVE LOGGED-IN ADMIN FROM LIST
+    const filteredUsers = data.users.filter(
+      (u) => u._id !== loggedInAdmin._id
+    );
+
+    setUsers(filteredUsers);
     setLoading(false);
   };
 
@@ -42,7 +50,6 @@ const AdminUsers = () => {
           <p className="text-gray-400">No users found</p>
         )}
 
-        {/* GRID */}
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {users.map((u) => (
             <div
@@ -82,8 +89,7 @@ const AdminUsers = () => {
               <div className="mt-auto pt-5">
                 <button
                   onClick={() => handleToggle(u._id)}
-                  className={`w-full px-4 py-2 rounded-md text-sm font-medium text-white
-                    transition
+                  className={`w-full px-4 py-2 rounded-md text-sm font-medium text-white transition
                     ${
                       u.isBlocked
                         ? "bg-green-600 hover:bg-green-700"
