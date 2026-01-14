@@ -13,7 +13,6 @@ const VehicleDetails = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // ✅ Fix #3 states
   const [days, setDays] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -41,7 +40,7 @@ const VehicleDetails = () => {
     loadVehicle();
   }, [id]);
 
-  /* ================= CALCULATE DAYS & PRICE (INCLUSIVE) ================= */
+  /* ================= CALCULATE DAYS & PRICE ================= */
 
   useEffect(() => {
     if (!startDate || !endDate || !vehicle) {
@@ -142,16 +141,16 @@ const VehicleDetails = () => {
 
   /* ================= UI ================= */
 
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <div className="min-h-screen bg-gray-950 px-4 py-12 text-gray-200">
       <div className="max-w-4xl mx-auto bg-gray-900 border border-gray-800 rounded-2xl shadow-lg p-8">
 
-        {/* TITLE */}
         <h2 className="text-3xl font-bold text-white mb-6">
           {vehicle.make} {vehicle.model}
         </h2>
 
-        {/* IMAGE */}
         <div className="w-full h-64 bg-gray-800 rounded-xl overflow-hidden mb-6">
           {vehicle.images?.length > 0 ? (
             <img
@@ -166,7 +165,6 @@ const VehicleDetails = () => {
           )}
         </div>
 
-        {/* DETAILS */}
         <div className="space-y-2 text-gray-300">
           <p>
             <span className="font-medium text-gray-400">Type:</span>{" "}
@@ -190,7 +188,6 @@ const VehicleDetails = () => {
 
         <hr className="my-8 border-gray-800" />
 
-        {/* BOOKING */}
         <h3 className="text-xl font-semibold text-white mb-4">
           Book this vehicle
         </h3>
@@ -210,6 +207,7 @@ const VehicleDetails = () => {
               <input
                 type="date"
                 value={startDate}
+                min={today}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
                            text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -224,13 +222,13 @@ const VehicleDetails = () => {
               <input
                 type="date"
                 value={endDate}
+                min={startDate || today}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm
                            text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* DAYS & PRICE */}
             {days > 0 && (
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-sm space-y-2">
                 <p>
@@ -247,7 +245,6 @@ const VehicleDetails = () => {
               </div>
             )}
 
-            {/* BOOK BUTTON */}
             <button
               onClick={handleBooking}
               disabled={bookingLoading}
@@ -265,7 +262,6 @@ const VehicleDetails = () => {
 
         <hr className="my-8 border-gray-800" />
 
-        {/* REVIEWS */}
         <h3 className="text-xl font-semibold text-white mb-5">
           Reviews
         </h3>
@@ -284,7 +280,6 @@ const VehicleDetails = () => {
                 {r.user.name}
               </p>
 
-              {/* ⭐ FIX #4 — STAR RATING UI */}
               <div className="flex items-center gap-1 mt-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <span
