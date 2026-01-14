@@ -22,7 +22,7 @@ const VehicleCard = ({ vehicle }) => {
 
       {/* CONTENT */}
       <div className="p-4">
-        <h4 className="font-semibold text-lg">
+        <h4 className="font-semibold text-lg text-gray-900">
           {vehicle.make} {vehicle.model}
         </h4>
 
