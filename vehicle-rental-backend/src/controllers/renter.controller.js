@@ -47,9 +47,9 @@ export const getVehicleDetails = async (req, res, next) => {
       throw new Error("Vehicle not found");
     }
 
+    // ✅ show all reviews (no approval flow)
     const reviews = await Review.find({
       vehicle: vehicle._id,
-      approved: true,
     }).populate("user", "name");
 
     res.json({ success: true, vehicle, reviews });
@@ -72,17 +72,27 @@ export const createBooking = async (req, res, next) => {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const today = new Date();
+
+    // normalize dates (remove time)
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
 
     if (isNaN(start) || isNaN(end)) {
       res.status(400);
       throw new Error("Invalid date format");
     }
 
+    // ❌ BLOCK PAST DATE BOOKINGS
+    if (start < today) {
+      res.status(400);
+      throw new Error("Booking start date cannot be in the past");
+    }
+
     if (start > end) {
       res.status(400);
-      throw new Error(
-        "End date must be the same or after start date"
-      );
+      throw new Error("End date must be the same or after start date");
     }
 
     const selectedVehicle = await Vehicle.findById(vehicle);
@@ -92,39 +102,18 @@ export const createBooking = async (req, res, next) => {
       throw new Error("Vehicle not available");
     }
 
-    // ❌ Owner booking own vehicle
+    // ❌ owner booking own vehicle
     if (selectedVehicle.owner.toString() === req.user._id.toString()) {
       res.status(400);
       throw new Error("You cannot book your own vehicle");
     }
 
-    /* ======================================================
-       🔒 STRICT OVERLAP CHECK (END DATE IS INCLUSIVE)
-       Blocks:
-       - Jan 10 → Jan 12
-       - Jan 12 → Jan 14 ❌
-       Allows:
-       - Jan 13 → Jan 15 ✅
-    ====================================================== */
-    const overlappingBooking = await Booking.findOne({
-      vehicle,
-      status: { $in: ["pending_payment", "booked"] },
-      startDate: { $lte: end },   // inclusive
-      endDate: { $gte: start },   // inclusive
-    });
+    // ✅ USE EXISTING SERVICE (NO LOGIC CHANGE)
+    await checkAvailability(vehicle, start, end);
 
-    if (overlappingBooking) {
-      res.status(400);
-      throw new Error(
-        "Vehicle is already booked for the selected dates"
-      );
-    }
-
-    // ✅ Inclusive day calculation
+    // inclusive days
     const days =
-      Math.ceil(
-        (end - start) / (1000 * 60 * 60 * 24)
-      ) + 1;
+      Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
     const totalAmount = days * selectedVehicle.pricePerDay;
 
@@ -157,8 +146,9 @@ export const getMyBookings = async (req, res, next) => {
       .sort({ createdAt: -1 });
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // 🔁 AUTO-MARK COMPLETED BOOKINGS
+    // auto-mark completed
     for (const booking of bookings) {
       if (
         booking.status === "booked" &&
@@ -174,8 +164,6 @@ export const getMyBookings = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 /* ===============================
    CANCEL BOOKING
@@ -200,7 +188,10 @@ export const cancelBooking = async (req, res, next) => {
     booking.status = "cancelled";
     await booking.save();
 
-    res.json({ success: true, message: "Booking cancelled successfully" });
+    res.json({
+      success: true,
+      message: "Booking cancelled successfully",
+    });
   } catch (error) {
     next(error);
   }
@@ -217,7 +208,7 @@ export const getMyPayments = async (req, res, next) => {
         path: "booking",
         populate: {
           path: "vehicle",
-          select: "model type",
+          select: "make model type",
         },
       })
       .sort({ createdAt: -1 });
@@ -258,13 +249,13 @@ export const addReview = async (req, res, next) => {
       booking,
       rating,
       comment,
-      approved: false,
+      approved: true, // ✅ auto-approved
     });
 
     res.status(201).json({
       success: true,
       review,
-      message: "Review submitted for approval",
+      message: "Review submitted successfully",
     });
   } catch (error) {
     next(error);
