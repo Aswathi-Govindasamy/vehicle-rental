@@ -45,12 +45,8 @@ export const getAllReviews = async () => {
   return res.data;
 };
 
-export const approveReview = async (id) => {
-  const res = await api.patch(`/admin/reviews/${id}/approve`);
-  return res.data;
-};
-
-export const rejectReview = async (id) => {
-  const res = await api.delete(`/admin/reviews/${id}/reject`);
+// ✅ ONLY DELETE REVIEW
+export const deleteReview = async (id) => {
+  const res = await api.delete(`/admin/reviews/${id}`);
   return res.data;
 };
