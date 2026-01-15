@@ -8,8 +8,7 @@ import {
   getAllBookings,
   getAllPayments,
   getAllReviews,
-  approveReview,
-  rejectReview,
+  rejectReview, // ✅ keep only delete
 } from "../controllers/admin.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -17,88 +16,30 @@ import { authorizeRoles } from "../middlewares/role.middleware.js";
 
 const router = express.Router();
 
-/* ======================================================
-   USERS
-   ====================================================== */
+/* ================= USERS ================= */
 
-router.get(
-  "/users",
-  protect,
-  authorizeRoles("admin"),
-  getAllUsers
-);
+router.get("/users", protect, authorizeRoles("admin"), getAllUsers);
+router.patch("/users/:id/block", protect, authorizeRoles("admin"), toggleUserBlock);
 
-router.patch(
-  "/users/:id/block",
-  protect,
-  authorizeRoles("admin"),
-  toggleUserBlock
-);
+/* ================= VEHICLES ================= */
 
-/* ======================================================
-   VEHICLES
-   ====================================================== */
+router.get("/vehicles", protect, authorizeRoles("admin"), getAllVehicles);
+router.patch("/vehicles/:id/approve", protect, authorizeRoles("admin"), approveVehicle);
+router.delete("/vehicles/:id/reject", protect, authorizeRoles("admin"), rejectVehicle);
 
-router.get(
-  "/vehicles",
-  protect,
-  authorizeRoles("admin"),
-  getAllVehicles
-);
+/* ================= BOOKINGS ================= */
 
-router.patch(
-  "/vehicles/:id/approve",
-  protect,
-  authorizeRoles("admin"),
-  approveVehicle
-);
+router.get("/bookings", protect, authorizeRoles("admin"), getAllBookings);
 
-router.delete(
-  "/vehicles/:id/reject",
-  protect,
-  authorizeRoles("admin"),
-  rejectVehicle
-);
+/* ================= PAYMENTS ================= */
 
-/* ======================================================
-   BOOKINGS
-   ====================================================== */
+router.get("/payments", protect, authorizeRoles("admin"), getAllPayments);
 
-router.get(
-  "/bookings",
-  protect,
-  authorizeRoles("admin"),
-  getAllBookings
-);
+/* ================= REVIEWS ================= */
 
-/* ======================================================
-   PAYMENTS
-   ====================================================== */
+router.get("/reviews", protect, authorizeRoles("admin"), getAllReviews);
 
-router.get(
-  "/payments",
-  protect,
-  authorizeRoles("admin"),
-  getAllPayments
-);
-
-/* ======================================================
-   REVIEWS
-   ====================================================== */
-
-router.get(
-  "/reviews",
-  protect,
-  authorizeRoles("admin"),
-  getAllReviews
-);
-
-router.patch(
-  "/reviews/:id/approve",
-  protect,
-  authorizeRoles("admin"),
-  approveReview
-);
+// ❌ NO APPROVE ROUTE
 
 router.delete(
   "/reviews/:id/reject",
