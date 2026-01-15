@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getAllReviews,
-  approveReview,
-  rejectReview,
-} from "../../api/admin.api";
+import { getAllReviews, deleteReview } from "../../api/admin.api";
 
 const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
@@ -11,7 +7,7 @@ const AdminReviews = () => {
 
   const loadReviews = async () => {
     const data = await getAllReviews();
-    setReviews(data.reviews);
+    setReviews(data.reviews || []);
     setLoading(false);
   };
 
@@ -19,14 +15,10 @@ const AdminReviews = () => {
     loadReviews();
   }, []);
 
-  const handleApprove = async (id) => {
-    await approveReview(id);
-    loadReviews(); // ✅ refresh UI
-  };
-
-  const handleReject = async (id) => {
-    await rejectReview(id);
-    loadReviews(); // ✅ refresh UI
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this review?")) return;
+    await deleteReview(id);
+    loadReviews();
   };
 
   if (loading) {
@@ -41,7 +33,7 @@ const AdminReviews = () => {
     <div className="min-h-screen bg-gray-950 px-4 py-10 text-gray-200">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-10">
-          Review Moderation
+          Reviews
         </h2>
 
         {reviews.length === 0 && (
@@ -56,7 +48,7 @@ const AdminReviews = () => {
                          hover:shadow-lg transition p-6 flex flex-col"
             >
               <p className="text-sm font-medium text-white">
-                {r.user.name}
+                {r.user?.name}
                 <span className="ml-2 text-yellow-400">
                   ⭐ {r.rating}
                 </span>
@@ -68,36 +60,13 @@ const AdminReviews = () => {
                 </p>
               )}
 
-              <span
-                className={`inline-block mt-4 px-3 py-1 text-xs font-semibold rounded-full w-fit
-                  ${
-                    r.approved
-                      ? "bg-green-900/40 text-green-400"
-                      : "bg-yellow-900/40 text-yellow-400"
-                  }`}
+              <button
+                onClick={() => handleDelete(r._id)}
+                className="mt-auto bg-red-600 text-white px-4 py-2 rounded-md text-sm
+                           hover:bg-red-700 transition"
               >
-                {r.approved ? "APPROVED" : "PENDING"}
-              </span>
-
-              {!r.approved && (
-                <div className="mt-auto pt-5 flex gap-3">
-                  <button
-                    onClick={() => handleApprove(r._id)}
-                    className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md text-sm
-                               hover:bg-green-700 transition"
-                  >
-                    Approve
-                  </button>
-
-                  <button
-                    onClick={() => handleReject(r._id)}
-                    className="flex-1 bg-red-600 text-white px-3 py-2 rounded-md text-sm
-                               hover:bg-red-700 transition"
-                  >
-                    Reject
-                  </button>
-                </div>
-              )}
+                Delete Review
+              </button>
             </div>
           ))}
         </div>
