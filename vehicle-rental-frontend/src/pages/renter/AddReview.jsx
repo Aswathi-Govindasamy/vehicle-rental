@@ -53,7 +53,7 @@ const AddReview = () => {
         comment,
       });
 
-      alert("Review submitted for approval");
+      alert("Review submitted successfully");
       navigate("/bookings");
     } catch (err) {
       if (
