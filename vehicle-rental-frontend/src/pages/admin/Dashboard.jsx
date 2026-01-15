@@ -73,7 +73,7 @@ const AdminDashboard = () => {
           >
             <div className="text-4xl mb-4">⭐</div>
             <h3 className="text-lg font-semibold text-white mb-1">
-              Review Moderation
+              Review
             </h3>
             <p className="text-sm text-gray-400">
               Approve or remove reviews
