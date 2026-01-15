@@ -9,7 +9,7 @@ const restoreScroll = () => {
 };
 
 const MyBookings = () => {
-  const navigate = useNavigate(); // ✅ ADDED
+  const navigate = useNavigate();
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,27 +52,19 @@ const MyBookings = () => {
             });
 
             alert("Payment successful!");
-
             restoreScroll();
-
-            // ✅ MAIN FIX
             navigate("/payments");
-
-          } catch (err) {
+          } catch {
             restoreScroll();
             alert("Payment verification failed");
           }
         },
 
         modal: {
-          ondismiss: function () {
-            restoreScroll();
-          },
+          ondismiss: restoreScroll,
         },
 
-        theme: {
-          color: "#4f46e5",
-        },
+        theme: { color: "#4f46e5" },
       };
 
       const rzp = new window.Razorpay(options);
@@ -80,17 +72,6 @@ const MyBookings = () => {
     } catch (err) {
       restoreScroll();
       alert(err.response?.data?.message || "Payment failed");
-    }
-  };
-
-  const handleCancel = async (id) => {
-    if (!window.confirm("Cancel this booking?")) return;
-
-    try {
-      await cancelBooking(id);
-      loadBookings();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to cancel booking");
     }
   };
 
@@ -122,42 +103,76 @@ const MyBookings = () => {
         )}
 
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {bookings.map((b) => (
-            <div
-              key={b._id}
-              className="bg-gray-900 border border-gray-800 rounded-2xl shadow hover:shadow-lg transition p-5 flex flex-col"
-            >
-              <h4 className="text-lg font-semibold text-white">
-                {b.vehicle?.make
-                  ? `${b.vehicle.make} ${b.vehicle.model}`
-                  : "Vehicle Removed"}
-              </h4>
+          {bookings.map((b) => {
+            const start = new Date(b.startDate);
+            const end = new Date(b.endDate);
+            const days =
+              Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
-              <p className="mt-3 font-medium text-gray-100">
-                Total: ₹{b.totalAmount}
-              </p>
+            return (
+              <div
+                key={b._id}
+                className="bg-gray-900 border border-gray-800 rounded-2xl shadow p-5 flex flex-col"
+              >
+                {/* VEHICLE */}
+                <h4 className="text-lg font-semibold text-white">
+                  {b.vehicle?.make
+                    ? `${b.vehicle.make} ${b.vehicle.model}`
+                    : "Vehicle Removed"}
+                </h4>
 
-              <div className="mt-auto pt-4">
-                {b.status === "pending_payment" && (
-                  <button
-                    onClick={() => handlePay(b._id)}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700"
-                  >
-                    Pay
-                  </button>
-                )}
+                {/* DATES */}
+                <p className="text-sm text-gray-400 mt-2">
+                  {start.toDateString()} → {end.toDateString()}
+                </p>
 
-                {b.status === "completed" && (
-                  <Link
-                    to={`/reviews/add/${b._id}`}
-                    className="text-indigo-400 text-sm"
-                  >
-                    Add Review →
-                  </Link>
-                )}
+                {/* DAYS */}
+                <p className="text-sm text-gray-300 mt-1">
+                  Duration: <span className="font-medium">{days} days</span>
+                </p>
+
+                {/* STATUS */}
+                <span
+                  className={`inline-block mt-3 px-3 py-1 text-xs rounded-full font-semibold w-fit
+                    ${
+                      b.status === "completed"
+                        ? "bg-green-900/40 text-green-400"
+                        : b.status === "pending_payment"
+                        ? "bg-yellow-900/40 text-yellow-400"
+                        : "bg-blue-900/40 text-blue-400"
+                    }`}
+                >
+                  {b.status.replace("_", " ").toUpperCase()}
+                </span>
+
+                {/* TOTAL */}
+                <p className="mt-3 font-medium text-gray-100">
+                  Total Amount: ₹{b.totalAmount}
+                </p>
+
+                {/* ACTIONS */}
+                <div className="mt-auto pt-4">
+                  {b.status === "pending_payment" && (
+                    <button
+                      onClick={() => handlePay(b._id)}
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700 transition"
+                    >
+                      Pay Now
+                    </button>
+                  )}
+
+                  {b.status === "completed" && (
+                    <Link
+                      to={`/reviews/add/${b._id}`}
+                      className="inline-block mt-3 text-indigo-400 text-sm hover:text-indigo-300"
+                    >
+                      Add Review →
+                    </Link>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
