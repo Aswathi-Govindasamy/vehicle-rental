@@ -6,7 +6,7 @@ import Review from "../models/Review.model.js";
 
 /* ======================================================
    USERS
-   ====================================================== */
+====================================================== */
 
 // Get all users
 export const getAllUsers = async (req, res, next) => {
@@ -42,9 +42,8 @@ export const toggleUserBlock = async (req, res, next) => {
 
 /* ======================================================
    VEHICLES
-   ====================================================== */
+====================================================== */
 
-// Get all vehicles
 export const getAllVehicles = async (req, res, next) => {
   try {
     const vehicles = await Vehicle.find().populate("owner", "name email");
@@ -54,7 +53,6 @@ export const getAllVehicles = async (req, res, next) => {
   }
 };
 
-// Approve / reject vehicle
 export const approveVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);
@@ -67,16 +65,12 @@ export const approveVehicle = async (req, res, next) => {
     vehicle.approved = true;
     await vehicle.save();
 
-    res.json({
-      success: true,
-      message: "Vehicle approved successfully",
-    });
+    res.json({ success: true, message: "Vehicle approved successfully" });
   } catch (error) {
     next(error);
   }
 };
 
-// Reject vehicle (delete listing)
 export const rejectVehicle = async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);
@@ -88,10 +82,7 @@ export const rejectVehicle = async (req, res, next) => {
 
     await vehicle.deleteOne();
 
-    res.json({
-      success: true,
-      message: "Vehicle rejected and removed",
-    });
+    res.json({ success: true, message: "Vehicle rejected and removed" });
   } catch (error) {
     next(error);
   }
@@ -99,9 +90,8 @@ export const rejectVehicle = async (req, res, next) => {
 
 /* ======================================================
    BOOKINGS
-   ====================================================== */
+====================================================== */
 
-// Get all bookings
 export const getAllBookings = async (req, res, next) => {
   try {
     const bookings = await Booking.find()
@@ -116,9 +106,8 @@ export const getAllBookings = async (req, res, next) => {
 
 /* ======================================================
    PAYMENTS
-   ====================================================== */
+====================================================== */
 
-// Get all payments
 export const getAllPayments = async (req, res, next) => {
   try {
     const payments = await Payment.find()
@@ -133,7 +122,7 @@ export const getAllPayments = async (req, res, next) => {
 
 /* ======================================================
    REVIEWS
-   ====================================================== */
+====================================================== */
 
 // Get all reviews
 export const getAllReviews = async (req, res, next) => {
@@ -148,30 +137,10 @@ export const getAllReviews = async (req, res, next) => {
   }
 };
 
-// Approve review
-export const approveReview = async (req, res, next) => {
-  try {
-    const review = await Review.findById(req.params.id);
 
-    if (!review) {
-      res.status(404);
-      throw new Error("Review not found");
-    }
 
-    review.approved = true;
-    await review.save();
-
-    res.json({
-      success: true,
-      message: "Review approved",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Reject review
-export const rejectReview = async (req, res, next) => {
+// Delete review (ADMIN MODERATION)
+export const deleteReview = async (req, res, next) => {
   try {
     const review = await Review.findById(req.params.id);
 
@@ -184,7 +153,7 @@ export const rejectReview = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: "Review rejected and removed",
+      message: "Review deleted successfully",
     });
   } catch (error) {
     next(error);
