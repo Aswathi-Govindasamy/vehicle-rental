@@ -15,6 +15,7 @@ const MyBookings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  /* ================= LOAD BOOKINGS ================= */
   const loadBookings = async () => {
     try {
       const data = await getMyBookings();
@@ -30,6 +31,7 @@ const MyBookings = () => {
     loadBookings();
   }, []);
 
+  /* ================= PAY ================= */
   const handlePay = async (bookingId) => {
     try {
       const data = await createPaymentOrder(bookingId);
@@ -60,10 +62,7 @@ const MyBookings = () => {
           }
         },
 
-        modal: {
-          ondismiss: restoreScroll,
-        },
-
+        modal: { ondismiss: restoreScroll },
         theme: { color: "#4f46e5" },
       };
 
@@ -75,6 +74,27 @@ const MyBookings = () => {
     }
   };
 
+  /* ================= CANCEL ================= */
+  const handleCancel = async (bookingId) => {
+    if (!window.confirm("Cancel this booking?")) return;
+
+    try {
+      await cancelBooking(bookingId);
+      alert("Booking cancelled successfully");
+      loadBookings();
+    } catch (err) {
+      alert(
+        err.response?.data?.message || "Failed to cancel booking"
+      );
+    }
+  };
+
+  /* ================= EDIT ================= */
+  const handleEdit = (bookingId) => {
+    navigate(`/bookings/edit/${bookingId}`);
+  };
+
+  /* ================= STATES ================= */
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 text-gray-300">
@@ -91,6 +111,7 @@ const MyBookings = () => {
     );
   }
 
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gray-950 px-4 py-10 text-gray-200">
       <div className="max-w-7xl mx-auto">
@@ -128,7 +149,8 @@ const MyBookings = () => {
 
                 {/* DAYS */}
                 <p className="text-sm text-gray-300 mt-1">
-                  Duration: <span className="font-medium">{days} days</span>
+                  Duration:{" "}
+                  <span className="font-medium">{days} days</span>
                 </p>
 
                 {/* STATUS */}
@@ -151,14 +173,30 @@ const MyBookings = () => {
                 </p>
 
                 {/* ACTIONS */}
-                <div className="mt-auto pt-4">
+                <div className="mt-auto pt-4 space-y-2">
                   {b.status === "pending_payment" && (
-                    <button
-                      onClick={() => handlePay(b._id)}
-                      className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700 transition"
-                    >
-                      Pay Now
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handlePay(b._id)}
+                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700 transition"
+                      >
+                        Pay Now
+                      </button>
+
+                      <button
+                        onClick={() => handleEdit(b._id)}
+                        className="w-full bg-yellow-600 text-white px-4 py-2 rounded-md text-sm hover:bg-yellow-700 transition"
+                      >
+                        Edit Dates
+                      </button>
+
+                      <button
+                        onClick={() => handleCancel(b._id)}
+                        className="w-full bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700 transition"
+                      >
+                        Cancel Booking
+                      </button>
+                    </>
                   )}
 
                   {b.status === "completed" && (
