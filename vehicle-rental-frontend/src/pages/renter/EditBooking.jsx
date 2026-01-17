@@ -68,8 +68,11 @@ const EditBooking = () => {
       return;
     }
 
-    const d =
-      Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const d = Math.max(
+  1,
+  Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+);
+
 
     setDays(d);
     setTotal(d * vehicle.pricePerDay);
