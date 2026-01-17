@@ -3,33 +3,43 @@ import Booking from "../models/Booking.model.js";
 /**
  * Check if a vehicle is available for given dates
  * Prevents overlapping bookings
- */
-export const checkAvailability = async (vehicleId, startDate, endDate) => {
+ */export const checkAvailability = async (
+  vehicleId,
+  startDate,
+  endDate,
+  excludeBookingId = null
+) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  if (end <= start) {
-    const err = new Error("End date must be after start date");
+  if (end < start) {
+    const err = new Error("End date cannot be before start date");
     err.statusCode = 400;
     throw err;
   }
 
-  const overlappingBooking = await Booking.findOne({
+  const query = {
     vehicle: vehicleId,
     status: { $in: ["pending_payment", "booked"] },
-    $or: [
-      {
-        startDate: { $lte: end },
-        endDate: { $gte: start },
-      },
-    ],
-  });
+    startDate: { $lte: end },
+    endDate: { $gte: start },
+  };
+
+  // ✅ exclude current booking while modifying
+  if (excludeBookingId) {
+    query._id = { $ne: excludeBookingId };
+  }
+
+  const overlappingBooking = await Booking.findOne(query);
 
   if (overlappingBooking) {
-    const err = new Error("Vehicle is already booked for selected dates");
+    const err = new Error(
+      "Vehicle is already booked for the selected dates"
+    );
     err.statusCode = 400;
     throw err;
   }
 
   return true;
 };
+
