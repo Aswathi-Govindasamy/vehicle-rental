@@ -3,7 +3,9 @@ import Booking from "../models/Booking.model.js";
 /**
  * Check if a vehicle is available for given dates
  * Prevents overlapping bookings
- */export const checkAvailability = async (
+ * Allows excluding a booking (used while modifying)
+ */
+export const checkAvailability = async (
   vehicleId,
   startDate,
   endDate,
@@ -12,6 +14,7 @@ import Booking from "../models/Booking.model.js";
   const start = new Date(startDate);
   const end = new Date(endDate);
 
+  // ❌ Invalid date range
   if (end < start) {
     const err = new Error("End date cannot be before start date");
     err.statusCode = 400;
@@ -25,7 +28,7 @@ import Booking from "../models/Booking.model.js";
     endDate: { $gte: start },
   };
 
-  // ✅ exclude current booking while modifying
+  // ✅ Exclude current booking when modifying
   if (excludeBookingId) {
     query._id = { $ne: excludeBookingId };
   }
@@ -42,4 +45,3 @@ import Booking from "../models/Booking.model.js";
 
   return true;
 };
-
