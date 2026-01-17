@@ -261,3 +261,48 @@ export const addReview = async (req, res, next) => {
     next(error);
   }
 };
+export const modifyBooking = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        message: "Start date and end date are required",
+      });
+    }
+
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+      status: "pending_payment", // ✅ only unpaid bookings
+    });
+
+    if (!booking) {
+      return res.status(400).json({
+        message: "Only unpaid bookings can be modified",
+      });
+    }
+
+    // ✅ Check availability for NEW dates
+    // Exclude current booking itself
+    await checkAvailability(
+      booking.vehicle,
+      startDate,
+      endDate,
+      booking._id // pass current booking id
+    );
+
+    booking.startDate = startDate;
+    booking.endDate = endDate;
+
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: "Booking dates updated successfully",
+      booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
