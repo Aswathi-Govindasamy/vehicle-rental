@@ -56,8 +56,11 @@ const VehicleDetails = () => {
       return;
     }
 
-    const calculatedDays =
-      Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const calculatedDays = Math.max(
+  1,
+  Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+);
+
 
     setDays(calculatedDays);
     setTotalPrice(calculatedDays * vehicle.pricePerDay);
