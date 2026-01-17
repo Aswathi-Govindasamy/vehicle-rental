@@ -112,8 +112,11 @@ export const createBooking = async (req, res, next) => {
     await checkAvailability(vehicle, start, end);
 
     // inclusive days
-    const days =
-      Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const days = Math.max(
+  1,
+  Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+);
+
 
     const totalAmount = days * selectedVehicle.pricePerDay;
 
@@ -283,17 +286,43 @@ export const modifyBooking = async (req, res, next) => {
       });
     }
 
-    // ✅ Check availability for NEW dates
-    // Exclude current booking itself
+    // 🔹 Normalize dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    if (start > end) {
+      return res.status(400).json({
+        message: "End date must be same or after start date",
+      });
+    }
+
+    // 🔹 Check availability for NEW dates
     await checkAvailability(
       booking.vehicle,
-      startDate,
-      endDate,
-      booking._id // pass current booking id
+      start,
+      end
     );
 
-    booking.startDate = startDate;
-    booking.endDate = endDate;
+    // 🔹 Fetch vehicle price
+    const vehicle = await Vehicle.findById(booking.vehicle);
+    if (!vehicle) {
+      return res.status(404).json({
+        message: "Vehicle not found",
+      });
+    }
+
+    // 🔹 FIXED: one-day booking logic
+    const days = Math.max(
+      1,
+      Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+    );
+
+    booking.startDate = start;
+    booking.endDate = end;
+    booking.totalAmount = days * vehicle.pricePerDay;
 
     await booking.save();
 
