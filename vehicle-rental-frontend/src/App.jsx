@@ -37,7 +37,7 @@ import NotFound from "./pages/NotFound";
 
 // layout
 import Navbar from "./components/layout/Navbar";
-import EditBooking from "./pages/bookings/EditBooking";
+import EditBooking from "./pages/renter/EditBooking";
 
 
 function App() {
