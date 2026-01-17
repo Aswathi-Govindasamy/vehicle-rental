@@ -7,6 +7,7 @@ import {
   cancelBooking,
   getMyPayments,
   addReview,
+  modifyBooking,
 } from "../controllers/renter.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -82,5 +83,12 @@ router.post(
   authorizeRoles("renter"),
   addReview
 );
+router.patch(
+  "/bookings/:id/modify",
+  protect,
+  authorizeRoles("renter"),
+  modifyBooking
+);
+
 
 export default router;
