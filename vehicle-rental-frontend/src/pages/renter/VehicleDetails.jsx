@@ -56,10 +56,11 @@ const VehicleDetails = () => {
       return;
     }
 
-    const calculatedDays = Math.max(
-  1,
-  Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-);
+ const DAY = 1000 * 60 * 60 * 24;
+
+const calculatedDays =
+  Math.floor((end - start) / DAY) + 1;
+
 
 
     setDays(calculatedDays);
