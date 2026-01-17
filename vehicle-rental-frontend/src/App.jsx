@@ -37,6 +37,8 @@ import NotFound from "./pages/NotFound";
 
 // layout
 import Navbar from "./components/layout/Navbar";
+import EditBooking from "./pages/bookings/EditBooking";
+
 
 function App() {
   return (
@@ -85,6 +87,11 @@ function App() {
 
         {/* ================= FALLBACK ================= */}
         <Route path="*" element={<NotFound />} />
+        <Route
+  path="/bookings/edit/:id"
+  element={<EditBooking />}
+/>
+
       </Routes>
     </Router>
   );
