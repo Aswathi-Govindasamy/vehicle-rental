@@ -53,8 +53,8 @@ const bookingSchema = new mongoose.Schema(
 /* 📅 Date validation */
 /* 📅 Date validation */
 bookingSchema.pre("save", function () {
-  if (this.endDate <= this.startDate) {
-    throw new Error("End date must be after start date");
+  if (this.endDate < this.startDate) {
+    throw new Error("End date must be the same or after start date");
   }
 });
 
