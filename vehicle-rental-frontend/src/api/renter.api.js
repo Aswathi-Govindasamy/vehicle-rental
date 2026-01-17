@@ -28,4 +28,12 @@ export const cancelBooking = async (id) => {
   const res = await api.patch(`/renter/bookings/${id}/cancel`);
   return res.data;
 };
+export const modifyBooking = async (id, data) => {
+  const res = await api.patch(
+    `/renter/bookings/${id}/modify`,
+    data
+  );
+  return res.data;
+};
+
 
