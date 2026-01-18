@@ -52,31 +52,28 @@ const EditBooking = () => {
   }, [id]);
 
   /* ================= RECALCULATE ================= */
-  useEffect(() => {
-    if (!vehicle || !startDate || !endDate) {
-      setDays(0);
-      setTotal(0);
-      return;
-    }
+ useEffect(() => {
+  if (!vehicle || !startDate || !endDate) {
+    setDays(0);
+    setTotal(0);
+    return;
+  }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
-    if (start > end) {
-      setDays(0);
-      setTotal(0);
-      return;
-    }
+  if (start > end) {
+    setDays(0);
+    setTotal(0);
+    return;
+  }
 
-    const d = Math.max(
-  1,
-  Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-);
+  const DAY = 1000 * 60 * 60 * 24;
+  const d = Math.floor((end - start) / DAY) + 1;
 
-
-    setDays(d);
-    setTotal(d * vehicle.pricePerDay);
-  }, [startDate, endDate, vehicle]);
+  setDays(d);
+  setTotal(d * vehicle.pricePerDay);
+}, [startDate, endDate, vehicle]);
 
   /* ================= SAVE ================= */
   const handleSave = async () => {
