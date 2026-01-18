@@ -16,7 +16,14 @@ export const viewVehicles = async (req, res, next) => {
       isAvailable: true,
     };
 
-    if (location) filter.location = location;
+    // ✅ FIX: case-insensitive location search
+    if (location) {
+      filter.location = {
+        $regex: location.trim(),
+        $options: "i",
+      };
+    }
+
     if (type) filter.type = type;
 
     if (minPrice || maxPrice) {
@@ -31,6 +38,7 @@ export const viewVehicles = async (req, res, next) => {
     next(error);
   }
 };
+
 
 /* ===============================
    VEHICLE DETAILS + REVIEWS
