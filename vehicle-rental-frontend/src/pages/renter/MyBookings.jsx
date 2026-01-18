@@ -127,10 +127,10 @@ const MyBookings = () => {
           {bookings.map((b) => {
             const start = new Date(b.startDate);
             const end = new Date(b.endDate);
-            const days = Math.max(
-  1,
-  Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-);
+            const DAY = 1000 * 60 * 60 * 24;
+const days =
+  Math.floor((end - start) / DAY) + 1;
+
 
             return (
               <div
