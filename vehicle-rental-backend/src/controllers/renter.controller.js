@@ -264,74 +264,52 @@ export const addReview = async (req, res, next) => {
     next(error);
   }
 };
-export const modifyBooking = async (req, res, next) => {
-  try {
-    const { startDate, endDate } = req.body;
+export const modifyBooking = async (req, res) => {
+  const { startDate, endDate } = req.body;
 
-    if (!startDate || !endDate) {
-      return res.status(400).json({
-        message: "Start date and end date are required",
-      });
-    }
+  const booking = await Booking.findById(req.params.id).populate("vehicle");
 
-    const booking = await Booking.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-      status: "pending_payment", // ✅ only unpaid bookings
-    });
-
-    if (!booking) {
-      return res.status(400).json({
-        message: "Only unpaid bookings can be modified",
-      });
-    }
-
-    // 🔹 Normalize dates
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-
-    if (start > end) {
-      return res.status(400).json({
-        message: "End date must be same or after start date",
-      });
-    }
-
-    // 🔹 Check availability for NEW dates
-    await checkAvailability(
-      booking.vehicle,
-      start,
-      end
-    );
-
-    // 🔹 Fetch vehicle price
-    const vehicle = await Vehicle.findById(booking.vehicle);
-    if (!vehicle) {
-      return res.status(404).json({
-        message: "Vehicle not found",
-      });
-    }
-
-    // 🔹 FIXED: one-day booking logic
-    const days = Math.max(
-      1,
-      Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-    );
-
-    booking.startDate = start;
-    booking.endDate = end;
-    booking.totalAmount = days * vehicle.pricePerDay;
-
-    await booking.save();
-
-    res.json({
-      success: true,
-      message: "Booking dates updated successfully",
-      booking,
-    });
-  } catch (error) {
-    next(error);
+  // 1️⃣ Booking must exist
+  if (!booking) {
+    res.status(404);
+    throw new Error("Booking not found");
   }
+
+  // 2️⃣ ONLY SAME RENTER CAN EDIT
+  if (booking.user.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error("You are not allowed to modify this booking");
+  }
+
+  // 3️⃣ Only unpaid bookings can be edited
+  if (booking.status !== "pending_payment") {
+    res.status(400);
+    throw new Error("Only unpaid bookings can be modified");
+  }
+
+  // 4️⃣ Check availability (IGNORE THIS BOOKING ITSELF)
+  await checkAvailability(
+    booking.vehicle._id,
+    startDate,
+    endDate,
+    booking._id
+  );
+
+  // 5️⃣ Inclusive day calculation
+  const DAY = 1000 * 60 * 60 * 24;
+  const days =
+    Math.floor(
+      (new Date(endDate) - new Date(startDate)) / DAY
+    ) + 1;
+
+  booking.startDate = startDate;
+  booking.endDate = endDate;
+  booking.totalAmount = days * booking.vehicle.pricePerDay;
+
+  await booking.save();
+
+  res.json({
+    success: true,
+    booking,
+  });
 };
